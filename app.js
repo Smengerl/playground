@@ -49,7 +49,7 @@ const ttsStopBtn       = document.getElementById('tts-stop-btn');
 const ttsStatus        = document.getElementById('tts-status');
 
 let currentIndex = -1;   // -1 = welcome screen
-const ttsSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+const isTtsSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 
 // ── Build sidebar navigation ─────────────────
 function buildNav() {
@@ -87,23 +87,23 @@ function setTtsStatus(text) {
 }
 
 function setTtsControlsEnabled(enabled) {
-  ttsChapterSelect.disabled = !enabled || !ttsSupported;
-  ttsStartBtn.disabled = !enabled || !ttsSupported;
-  ttsPauseBtn.disabled = !enabled || !ttsSupported;
-  ttsStopBtn.disabled = !enabled || !ttsSupported;
+  ttsChapterSelect.disabled = !enabled || !isTtsSupported;
+  ttsStartBtn.disabled = !enabled || !isTtsSupported;
+  ttsPauseBtn.disabled = !enabled || !isTtsSupported;
+  ttsStopBtn.disabled = !enabled || !isTtsSupported;
 }
 
 function stopTts(statusText = 'Gestoppt') {
-  if (!ttsSupported) return;
+  if (!isTtsSupported) return;
   window.speechSynthesis.cancel();
   setTtsStatus(statusText);
 }
 
 async function startTts() {
-  if (!ttsSupported) return;
+  if (!isTtsSupported) return;
 
   const selectedIndex = Number(ttsChapterSelect.value);
-  if (!Number.isInteger(selectedIndex) || !CHAPTERS[selectedIndex]) return;
+  if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= CHAPTERS.length) return;
 
   if (selectedIndex !== currentIndex) {
     await loadChapter(selectedIndex);
@@ -122,7 +122,7 @@ async function startTts() {
 }
 
 function getUnavailableStatus() {
-  return ttsSupported ? '' : 'Nicht verfügbar';
+  return isTtsSupported ? '' : 'Nicht verfügbar';
 }
 
 // ── Load & render a chapter ──────────────────
@@ -166,7 +166,7 @@ async function loadChapter(idx) {
   renderNav(idx);
   ttsChapterSelect.value = String(idx);
   setTtsControlsEnabled(true);
-  setTtsStatus(ttsSupported ? 'Bereit' : 'Nicht verfügbar');
+  setTtsStatus(isTtsSupported ? 'Bereit' : 'Nicht verfügbar');
 }
 
 // ── Prev / Next navigation ────────────────────
@@ -199,7 +199,7 @@ function showWelcome() {
   contentArea.style.display    = 'none';
   chapterNav.style.display     = 'none';
   setTtsControlsEnabled(false);
-  setTtsStatus(ttsSupported ? 'Kapitel wählen' : 'Nicht verfügbar');
+  setTtsStatus(isTtsSupported ? 'Kapitel wählen' : 'Nicht verfügbar');
 
   closeSidebar();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -233,7 +233,7 @@ function closeSidebar() {
 startBtn.addEventListener('click', () => loadChapter(0));
 ttsStartBtn.addEventListener('click', startTts);
 ttsPauseBtn.addEventListener('click', () => {
-  if (!ttsSupported) return;
+  if (!isTtsSupported) return;
   if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
     window.speechSynthesis.pause();
     setTtsStatus('Pausiert');
@@ -244,7 +244,7 @@ ttsPauseBtn.addEventListener('click', () => {
 });
 ttsStopBtn.addEventListener('click', () => stopTts('Gestoppt'));
 ttsChapterSelect.addEventListener('change', () => {
-  if (!ttsSupported) return;
+  if (!isTtsSupported) return;
   if (window.speechSynthesis.speaking || window.speechSynthesis.paused) {
     stopTts('Bereit');
   }

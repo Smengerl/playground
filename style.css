@@ -14,6 +14,8 @@
   --text:       #2c2c2c;
   --muted:      #6b6b6b;
   --border:     #e0d8cc;
+  --surface:    #fff;
+  --disabled-bg: #f3eee7;
   --radius:     8px;
   --sidebar-w:  270px;
   --transition: 0.25s ease;
@@ -191,14 +193,14 @@ body {
 
 #tts-controls button {
   cursor: pointer;
-  background: #fff;
+  background: var(--surface);
 }
 
 #tts-controls button:disabled,
 #tts-controls select:disabled {
   cursor: default;
   color: var(--muted);
-  background: #f3eee7;
+  background: var(--disabled-bg);
 }
 
 #tts-status {
