@@ -85,7 +85,12 @@ function speakCurrentChapter() {
   stopSpeaking();
   const utterance = new SpeechSynthesisUtterance(text);
   const selectedVoice = voices.find((voice) => voice.name === voiceSelect.value);
-  if (selectedVoice) utterance.voice = selectedVoice;
+  if (selectedVoice) {
+    utterance.voice = selectedVoice;
+  } else if (voices.length) {
+    voiceSelect.value = voices[0].name;
+    utterance.voice = voices[0];
+  }
   window.speechSynthesis.speak(utterance);
 }
 

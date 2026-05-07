@@ -12,6 +12,7 @@
   --sidebar-hover: #2e3f57;
   --sidebar-active: var(--primary);
   --text:       #2c2c2c;
+  --white:      #fff;
   --muted:      #6b6b6b;
   --border:     #e0d8cc;
   --radius:     8px;
@@ -311,7 +312,7 @@ body {
 #tts-controls select {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: #fff;
+  background: var(--white);
   color: var(--text);
   padding: 8px 10px;
   font-size: 0.875rem;
@@ -321,7 +322,7 @@ body {
 #tts-controls button {
   padding: 9px 14px;
   background: var(--primary);
-  color: #fff;
+  color: var(--white);
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
