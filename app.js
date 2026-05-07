@@ -41,58 +41,18 @@ const contentArea   = document.getElementById('content-area');
 const chapterNav    = document.getElementById('chapter-nav');
 const ttsControls   = document.getElementById('tts-controls');
 const voiceSelect   = document.getElementById('voice-select');
-const speakBtn      = document.getElementById('speak-btn');
-const stopSpeakBtn  = document.getElementById('stop-speak-btn');
+const ttsChapterSelect = document.getElementById('tts-chapter-select');
+const ttsStartBtn      = document.getElementById('tts-start-btn');
+const ttsPauseBtn      = document.getElementById('tts-pause-btn');
+const ttsStopBtn       = document.getElementById('tts-stop-btn');
+const ttsStatus        = document.getElementById('tts-status');
 const breadcrumb    = document.querySelector('#topbar .breadcrumb');
 const welcomeScreen = document.getElementById('welcome');
 const startBtn      = document.querySelector('#welcome .start-btn');
 
 let currentIndex = -1;   // -1 = welcome screen
 let voices = [];
-const supportsSpeech = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
-
-function stopSpeaking() {
-  if (supportsSpeech) window.speechSynthesis.cancel();
-}
-
-function populateVoiceSelect() {
-  if (!supportsSpeech) return;
-
-  const loadedVoices = window.speechSynthesis.getVoices();
-  if (!loadedVoices.length) return;
-
-  const previousSelection = voiceSelect.value;
-  voices = loadedVoices;
-  voiceSelect.innerHTML = '';
-
-  voices.forEach((voice) => {
-    const option = document.createElement('option');
-    option.value = voice.name;
-    option.textContent = `${voice.name} (${voice.lang})`;
-    voiceSelect.appendChild(option);
-  });
-
-  if (!voices.length) return;
-  const hasPrevious = voices.some((voice) => voice.name === previousSelection);
-  voiceSelect.value = hasPrevious ? previousSelection : voices[0].name;
-}
-
-function speakCurrentChapter() {
-  if (!supportsSpeech) return;
-  const text = contentArea.innerText.trim();
-  if (!text) return;
-
-  stopSpeaking();
-  const utterance = new SpeechSynthesisUtterance(text);
-  const selectedVoice = voices.find((voice) => voice.name === voiceSelect.value);
-  if (selectedVoice) {
-    utterance.voice = selectedVoice;
-  } else if (voices.length) {
-    voiceSelect.value = voices[0].name;
-    utterance.voice = voices[0];
-  }
-  window.speechSynthesis.speak(utterance);
-}
+const isTtsSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 
 // ── Build sidebar navigation ─────────────────
 function buildNav() {
@@ -115,6 +75,94 @@ function buildNav() {
     li.appendChild(a);
     chapterList.appendChild(li);
   });
+
+  ttsChapterSelect.innerHTML = '';
+  CHAPTERS.forEach((ch, idx) => {
+    const option = document.createElement('option');
+    option.value = idx;
+    option.textContent = `${ch.label}: ${ch.title}`;
+    ttsChapterSelect.appendChild(option);
+  });
+}
+
+function setTtsStatus(text) {
+  ttsStatus.textContent = text;
+}
+
+function setTtsControlsEnabled(enabled) {
+  const disabled = !enabled || !isTtsSupported;
+  voiceSelect.disabled = disabled;
+  ttsChapterSelect.disabled = disabled;
+  ttsStartBtn.disabled = disabled;
+  ttsPauseBtn.disabled = disabled;
+  ttsStopBtn.disabled = disabled;
+}
+
+function stopTts(statusText = 'Gestoppt') {
+  if (!isTtsSupported) return;
+  window.speechSynthesis.cancel();
+  setTtsStatus(statusText);
+}
+
+function populateVoiceSelect() {
+  if (!isTtsSupported) return;
+
+  const loadedVoices = window.speechSynthesis.getVoices();
+  if (!loadedVoices.length) return;
+
+  const previousSelection = voiceSelect.value;
+  voices = loadedVoices;
+  voiceSelect.innerHTML = '';
+
+  voices.forEach((voice) => {
+    const option = document.createElement('option');
+    option.value = voice.name;
+    option.textContent = `${voice.name} (${voice.lang})`;
+    option.lang = voice.lang;
+    voiceSelect.appendChild(option);
+  });
+
+  if (!voices.length) return;
+  const hasPrevious = voices.some((voice) => voice.name === previousSelection);
+  voiceSelect.value = hasPrevious ? previousSelection : voices[0].name;
+}
+
+async function startTts() {
+  if (!isTtsSupported) return;
+
+  const selectedIndex = Number(ttsChapterSelect.value);
+  if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= CHAPTERS.length) {
+    setTtsStatus('Ungültiges Kapitel');
+    return;
+  }
+
+  if (selectedIndex !== currentIndex) {
+    await loadChapter(selectedIndex);
+  }
+
+  const text = contentArea.innerText.trim();
+  if (!text) {
+    setTtsStatus('Kein Inhalt verfügbar');
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'de-DE';
+
+  const selectedVoice = voices.find((voice) => voice.name === voiceSelect.value);
+  if (selectedVoice) {
+    utterance.voice = selectedVoice;
+  }
+
+  utterance.onstart = () => setTtsStatus('Läuft');
+  utterance.onend = () => setTtsStatus('Fertig');
+  utterance.onerror = () => setTtsStatus('Fehler');
+  window.speechSynthesis.speak(utterance);
+}
+
+function getUnavailableStatus() {
+  return isTtsSupported ? '' : 'Nicht verfügbar';
 }
 
 // ── Load & render a chapter ──────────────────
@@ -123,7 +171,7 @@ async function loadChapter(idx) {
   if (!chapter) return;
 
   currentIndex = idx;
-  stopSpeaking();
+  stopTts(getUnavailableStatus());
   closeSidebar();
   showContent();
 
@@ -156,6 +204,9 @@ async function loadChapter(idx) {
 
   // Prev / Next buttons
   renderNav(idx);
+  ttsChapterSelect.value = String(idx);
+  setTtsControlsEnabled(true);
+  setTtsStatus(isTtsSupported ? 'Bereit' : 'Nicht verfügbar');
 }
 
 // ── Prev / Next navigation ────────────────────
@@ -179,7 +230,7 @@ function renderNav(idx) {
 // ── Welcome screen ───────────────────────────
 function showWelcome() {
   currentIndex = -1;
-  stopSpeaking();
+  stopTts(getUnavailableStatus());
 
   chapterList.querySelectorAll('a').forEach(a => a.classList.remove('active'));
   breadcrumb.innerHTML = '<span>Willkommen</span>';
@@ -188,6 +239,8 @@ function showWelcome() {
   contentArea.style.display    = 'none';
   ttsControls.style.display    = 'none';
   chapterNav.style.display     = 'none';
+  setTtsControlsEnabled(false);
+  setTtsStatus(isTtsSupported ? 'Kapitel wählen' : 'Nicht verfügbar');
 
   closeSidebar();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -196,7 +249,7 @@ function showWelcome() {
 function showContent() {
   welcomeScreen.style.display  = 'none';
   contentArea.style.display    = 'block';
-  ttsControls.style.display    = supportsSpeech ? 'flex' : 'none';
+  ttsControls.style.display    = 'flex';
   chapterNav.style.display     = 'flex';
 }
 
@@ -220,13 +273,32 @@ function closeSidebar() {
 
 // ── Start button ──────────────────────────────
 startBtn.addEventListener('click', () => loadChapter(0));
-speakBtn.addEventListener('click', speakCurrentChapter);
-stopSpeakBtn.addEventListener('click', stopSpeaking);
+ttsStartBtn.addEventListener('click', startTts);
+ttsPauseBtn.addEventListener('click', () => {
+  if (!isTtsSupported) return;
+
+  if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+    window.speechSynthesis.pause();
+    setTtsStatus('Pausiert');
+  } else if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    setTtsStatus('Läuft');
+  } else {
+    setTtsStatus('Keine aktive Wiedergabe');
+  }
+});
+ttsStopBtn.addEventListener('click', () => stopTts('Gestoppt'));
+ttsChapterSelect.addEventListener('change', () => {
+  if (!isTtsSupported) return;
+  if (window.speechSynthesis.speaking || window.speechSynthesis.paused) {
+    stopTts('Bereit');
+  }
+});
 
 // ── Logo / title click → welcome ─────────────
 document.querySelector('#sidebar-header').addEventListener('click', showWelcome);
 
-if (supportsSpeech) {
+if (isTtsSupported) {
   populateVoiceSelect();
   window.speechSynthesis.addEventListener('voiceschanged', populateVoiceSelect);
 }
