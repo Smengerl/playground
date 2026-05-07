@@ -118,9 +118,11 @@ function populateVoiceSelect() {
     const option = document.createElement('option');
     option.value = voice.name;
     option.textContent = `${voice.name} (${voice.lang})`;
+    option.lang = voice.lang;
     voiceSelect.appendChild(option);
   });
 
+  if (!voices.length) return;
   const hasPrevious = voices.some((voice) => voice.name === previousSelection);
   voiceSelect.value = hasPrevious ? previousSelection : voices[0].name;
 }
