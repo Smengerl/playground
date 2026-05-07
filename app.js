@@ -121,7 +121,6 @@ function populateVoiceSelect() {
     voiceSelect.appendChild(option);
   });
 
-  if (!voices.length) return;
   const hasPrevious = voices.some((voice) => voice.name === previousSelection);
   voiceSelect.value = hasPrevious ? previousSelection : voices[0].name;
 }
@@ -283,7 +282,7 @@ ttsPauseBtn.addEventListener('click', () => {
     window.speechSynthesis.resume();
     setTtsStatus('Läuft');
   } else {
-    setTtsStatus('Nicht aktiv');
+    setTtsStatus('Keine aktive Wiedergabe');
   }
 });
 ttsStopBtn.addEventListener('click', () => stopTts('Gestoppt'));
