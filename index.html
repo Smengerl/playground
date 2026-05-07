@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flitz – Die Geschichte eines kleinen Autos</title>
+
+  <!-- marked.js – Markdown → HTML parser (MIT license, loaded from CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── Mobile menu toggle ─────────────────── -->
+  <button id="menu-toggle" aria-label="Menü öffnen">☰</button>
+  <div id="sidebar-overlay"></div>
+
+  <!-- ── Sidebar ───────────────────────────── -->
+  <nav id="sidebar" aria-label="Kapitelnavigation">
+    <div id="sidebar-header" style="cursor:pointer;" title="Zur Startseite">
+      <div class="logo">🚗</div>
+      <h1>Flitz</h1>
+      <p>Die Geschichte eines kleinen Autos</p>
+    </div>
+
+    <ul id="chapter-list" role="list"></ul>
+  </nav>
+
+  <!-- ── Main area ─────────────────────────── -->
+  <div id="main">
+
+    <header id="topbar">
+      <div class="breadcrumb" aria-live="polite"></div>
+    </header>
+
+    <!-- Welcome screen (shown on first load) -->
+    <section id="welcome" role="region" aria-label="Willkommen">
+      <div class="welcome-icon">🚗✨</div>
+      <h2>Willkommen bei Flitz!</h2>
+      <p>
+        Begleite Flitz, ein kleines rotes Auto, auf seiner Reise von der
+        Fabrik am Sonnenhügel hinaus in die Welt. Wähle ein Kapitel aus
+        dem Menü oder beginne direkt von vorne.
+      </p>
+      <button class="start-btn">▶ Geschichte beginnen</button>
+    </section>
+
+    <!-- Chapter content (hidden until a chapter is chosen) -->
+    <article id="content-area" style="display:none;" aria-live="polite"></article>
+
+    <!-- Prev / Next navigation -->
+    <nav id="chapter-nav" style="display:none;" aria-label="Kapitelwechsel"></nav>
+
+  </div><!-- /#main -->
+
+  <script src="app.js"></script>
+</body>
+</html>
