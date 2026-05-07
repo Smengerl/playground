@@ -72,13 +72,14 @@ function populateVoiceSelect() {
     voiceSelect.appendChild(option);
   });
 
+  if (!voices.length) return;
   const hasPrevious = voices.some((voice) => voice.name === previousSelection);
   voiceSelect.value = hasPrevious ? previousSelection : voices[0].name;
 }
 
 function speakCurrentChapter() {
   if (!supportsSpeech) return;
-  const text = contentArea.textContent.trim();
+  const text = contentArea.innerText.trim();
   if (!text) return;
 
   stopSpeaking();
