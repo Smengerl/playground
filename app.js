@@ -39,16 +39,19 @@ const chapterList   = document.getElementById('chapter-list');
 const mainArea      = document.getElementById('main');
 const contentArea   = document.getElementById('content-area');
 const chapterNav    = document.getElementById('chapter-nav');
-const breadcrumb    = document.querySelector('#topbar .breadcrumb');
-const welcomeScreen = document.getElementById('welcome');
-const startBtn      = document.querySelector('#welcome .start-btn');
+const ttsControls   = document.getElementById('tts-controls');
+const voiceSelect   = document.getElementById('voice-select');
 const ttsChapterSelect = document.getElementById('tts-chapter-select');
 const ttsStartBtn      = document.getElementById('tts-start-btn');
 const ttsPauseBtn      = document.getElementById('tts-pause-btn');
 const ttsStopBtn       = document.getElementById('tts-stop-btn');
 const ttsStatus        = document.getElementById('tts-status');
+const breadcrumb    = document.querySelector('#topbar .breadcrumb');
+const welcomeScreen = document.getElementById('welcome');
+const startBtn      = document.querySelector('#welcome .start-btn');
 
 let currentIndex = -1;   // -1 = welcome screen
+let voices = [];
 const isTtsSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 
 // ── Build sidebar navigation ─────────────────
@@ -87,16 +90,40 @@ function setTtsStatus(text) {
 }
 
 function setTtsControlsEnabled(enabled) {
-  ttsChapterSelect.disabled = !enabled || !isTtsSupported;
-  ttsStartBtn.disabled = !enabled || !isTtsSupported;
-  ttsPauseBtn.disabled = !enabled || !isTtsSupported;
-  ttsStopBtn.disabled = !enabled || !isTtsSupported;
+  const disabled = !enabled || !isTtsSupported;
+  voiceSelect.disabled = disabled;
+  ttsChapterSelect.disabled = disabled;
+  ttsStartBtn.disabled = disabled;
+  ttsPauseBtn.disabled = disabled;
+  ttsStopBtn.disabled = disabled;
 }
 
 function stopTts(statusText = 'Gestoppt') {
   if (!isTtsSupported) return;
   window.speechSynthesis.cancel();
   setTtsStatus(statusText);
+}
+
+function populateVoiceSelect() {
+  if (!isTtsSupported) return;
+
+  const loadedVoices = window.speechSynthesis.getVoices();
+  if (!loadedVoices.length) return;
+
+  const previousSelection = voiceSelect.value;
+  voices = loadedVoices;
+  voiceSelect.innerHTML = '';
+
+  voices.forEach((voice) => {
+    const option = document.createElement('option');
+    option.value = voice.name;
+    option.textContent = `${voice.name} (${voice.lang})`;
+    voiceSelect.appendChild(option);
+  });
+
+  if (!voices.length) return;
+  const hasPrevious = voices.some((voice) => voice.name === previousSelection);
+  voiceSelect.value = hasPrevious ? previousSelection : voices[0].name;
 }
 
 async function startTts() {
@@ -121,6 +148,12 @@ async function startTts() {
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'de-DE';
+
+  const selectedVoice = voices.find((voice) => voice.name === voiceSelect.value);
+  if (selectedVoice) {
+    utterance.voice = selectedVoice;
+  }
+
   utterance.onstart = () => setTtsStatus('Läuft');
   utterance.onend = () => setTtsStatus('Fertig');
   utterance.onerror = () => setTtsStatus('Fehler');
@@ -203,6 +236,7 @@ function showWelcome() {
 
   welcomeScreen.style.display  = 'block';
   contentArea.style.display    = 'none';
+  ttsControls.style.display    = 'none';
   chapterNav.style.display     = 'none';
   setTtsControlsEnabled(false);
   setTtsStatus(isTtsSupported ? 'Kapitel wählen' : 'Nicht verfügbar');
@@ -214,6 +248,7 @@ function showWelcome() {
 function showContent() {
   welcomeScreen.style.display  = 'none';
   contentArea.style.display    = 'block';
+  ttsControls.style.display    = 'flex';
   chapterNav.style.display     = 'flex';
 }
 
@@ -240,12 +275,15 @@ startBtn.addEventListener('click', () => loadChapter(0));
 ttsStartBtn.addEventListener('click', startTts);
 ttsPauseBtn.addEventListener('click', () => {
   if (!isTtsSupported) return;
+
   if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
     window.speechSynthesis.pause();
     setTtsStatus('Pausiert');
   } else if (window.speechSynthesis.paused) {
     window.speechSynthesis.resume();
     setTtsStatus('Läuft');
+  } else {
+    setTtsStatus('Nicht aktiv');
   }
 });
 ttsStopBtn.addEventListener('click', () => stopTts('Gestoppt'));
@@ -258,6 +296,11 @@ ttsChapterSelect.addEventListener('change', () => {
 
 // ── Logo / title click → welcome ─────────────
 document.querySelector('#sidebar-header').addEventListener('click', showWelcome);
+
+if (isTtsSupported) {
+  populateVoiceSelect();
+  window.speechSynthesis.addEventListener('voiceschanged', populateVoiceSelect);
+}
 
 // ── Init ──────────────────────────────────────
 buildNav();

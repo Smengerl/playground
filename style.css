@@ -12,6 +12,7 @@
   --sidebar-hover: #2e3f57;
   --sidebar-active: var(--primary);
   --text:       #2c2c2c;
+  --white:      #fff;
   --muted:      #6b6b6b;
   --border:     #e0d8cc;
   --surface:    #fff;
@@ -180,6 +181,13 @@ body {
   gap: 8px;
   font-family: inherit;
   font-size: 0.8rem;
+  flex-wrap: wrap;
+}
+
+#tts-controls label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 #tts-controls select,
