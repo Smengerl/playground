@@ -103,14 +103,20 @@ async function startTts() {
   if (!isTtsSupported) return;
 
   const selectedIndex = Number(ttsChapterSelect.value);
-  if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= CHAPTERS.length) return;
+  if (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= CHAPTERS.length) {
+    setTtsStatus('Ungültiges Kapitel');
+    return;
+  }
 
   if (selectedIndex !== currentIndex) {
     await loadChapter(selectedIndex);
   }
 
   const text = contentArea.innerText.trim();
-  if (!text) return;
+  if (!text) {
+    setTtsStatus('Kein Inhalt verfügbar');
+    return;
+  }
 
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
