@@ -39,11 +39,60 @@ const chapterList   = document.getElementById('chapter-list');
 const mainArea      = document.getElementById('main');
 const contentArea   = document.getElementById('content-area');
 const chapterNav    = document.getElementById('chapter-nav');
+const ttsControls   = document.getElementById('tts-controls');
+const voiceSelect   = document.getElementById('voice-select');
+const speakBtn      = document.getElementById('speak-btn');
+const stopSpeakBtn  = document.getElementById('stop-speak-btn');
 const breadcrumb    = document.querySelector('#topbar .breadcrumb');
 const welcomeScreen = document.getElementById('welcome');
 const startBtn      = document.querySelector('#welcome .start-btn');
 
 let currentIndex = -1;   // -1 = welcome screen
+let voices = [];
+const supportsSpeech = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+
+function stopSpeaking() {
+  if (supportsSpeech) window.speechSynthesis.cancel();
+}
+
+function populateVoiceSelect() {
+  if (!supportsSpeech) return;
+
+  const loadedVoices = window.speechSynthesis.getVoices();
+  if (!loadedVoices.length) return;
+
+  const previousSelection = voiceSelect.value;
+  voices = loadedVoices;
+  voiceSelect.innerHTML = '';
+
+  voices.forEach((voice) => {
+    const option = document.createElement('option');
+    option.value = voice.name;
+    option.textContent = `${voice.name} (${voice.lang})`;
+    voiceSelect.appendChild(option);
+  });
+
+  if (!voices.length) return;
+  const hasPrevious = voices.some((voice) => voice.name === previousSelection);
+  voiceSelect.value = hasPrevious ? previousSelection : voices[0].name;
+}
+
+function speakCurrentChapter() {
+  if (!supportsSpeech) return;
+  const text = contentArea.innerText.trim();
+  if (!text) return;
+
+  stopSpeaking();
+  const utterance = new SpeechSynthesisUtterance(text);
+  const selectedVoice = voices.find((voice) => voice.name === voiceSelect.value);
+  if (selectedVoice) {
+    utterance.voice = selectedVoice;
+  } else if (voices.length) {
+    voiceSelect.value = voices[0].name;
+    utterance.voice = voices[0];
+  }
+  window.speechSynthesis.speak(utterance);
+}
 
 // ── Build sidebar navigation ─────────────────
 function buildNav() {
@@ -74,6 +123,7 @@ async function loadChapter(idx) {
   if (!chapter) return;
 
   currentIndex = idx;
+  stopSpeaking();
   closeSidebar();
   showContent();
 
@@ -129,12 +179,14 @@ function renderNav(idx) {
 // ── Welcome screen ───────────────────────────
 function showWelcome() {
   currentIndex = -1;
+  stopSpeaking();
 
   chapterList.querySelectorAll('a').forEach(a => a.classList.remove('active'));
   breadcrumb.innerHTML = '<span>Willkommen</span>';
 
   welcomeScreen.style.display  = 'block';
   contentArea.style.display    = 'none';
+  ttsControls.style.display    = 'none';
   chapterNav.style.display     = 'none';
 
   closeSidebar();
@@ -144,6 +196,7 @@ function showWelcome() {
 function showContent() {
   welcomeScreen.style.display  = 'none';
   contentArea.style.display    = 'block';
+  ttsControls.style.display    = supportsSpeech ? 'flex' : 'none';
   chapterNav.style.display     = 'flex';
 }
 
@@ -167,9 +220,16 @@ function closeSidebar() {
 
 // ── Start button ──────────────────────────────
 startBtn.addEventListener('click', () => loadChapter(0));
+speakBtn.addEventListener('click', speakCurrentChapter);
+stopSpeakBtn.addEventListener('click', stopSpeaking);
 
 // ── Logo / title click → welcome ─────────────
 document.querySelector('#sidebar-header').addEventListener('click', showWelcome);
+
+if (supportsSpeech) {
+  populateVoiceSelect();
+  window.speechSynthesis.addEventListener('voiceschanged', populateVoiceSelect);
+}
 
 // ── Init ──────────────────────────────────────
 buildNav();

@@ -12,6 +12,7 @@
   --sidebar-hover: #2e3f57;
   --sidebar-active: var(--primary);
   --text:       #2c2c2c;
+  --white:      #fff;
   --muted:      #6b6b6b;
   --border:     #e0d8cc;
   --radius:     8px;
@@ -292,6 +293,45 @@ body {
 #chapter-nav button:hover { background: var(--primary-dk); transform: translateY(-1px); }
 #chapter-nav button:disabled { background: var(--border); color: var(--muted); cursor: default; transform: none; }
 
+/* ── Vorlesefunktion ────────────────────────── */
+#tts-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 56px 18px;
+  flex-wrap: wrap;
+  font-family: inherit;
+}
+
+#tts-controls label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+#tts-controls select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--white);
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  min-width: 220px;
+}
+
+#tts-controls button {
+  padding: 9px 14px;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+#tts-controls button:hover { background: var(--primary-dk); }
+
 /* ── Welcome screen ─────────────────────────── */
 #welcome {
   padding: 60px 56px;
@@ -351,6 +391,8 @@ body {
   #content-area { padding: 32px 20px 60px; }
 
   #welcome { padding: 40px 20px; }
+
+  #tts-controls { padding: 0 20px 16px; }
 
   #chapter-nav { padding: 0 20px 50px; }
 }

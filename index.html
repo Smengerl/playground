@@ -49,6 +49,14 @@
     <!-- Chapter content (hidden until a chapter is chosen) -->
     <article id="content-area" style="display:none;" aria-live="polite"></article>
 
+    <!-- Vorlesefunktion -->
+    <section id="tts-controls" style="display:none;" aria-label="Vorlesefunktion">
+      <label for="voice-select">Sprecher:</label>
+      <select id="voice-select" aria-label="Sprecher auswählen"></select>
+      <button id="speak-btn" type="button">🔊 Vorlesen</button>
+      <button id="stop-speak-btn" type="button">⏹ Stop</button>
+    </section>
+
     <!-- Prev / Next navigation -->
     <nav id="chapter-nav" style="display:none;" aria-label="Kapitelwechsel"></nav>
 
