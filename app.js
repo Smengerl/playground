@@ -42,8 +42,14 @@ const chapterNav    = document.getElementById('chapter-nav');
 const breadcrumb    = document.querySelector('#topbar .breadcrumb');
 const welcomeScreen = document.getElementById('welcome');
 const startBtn      = document.querySelector('#welcome .start-btn');
+const ttsChapterSelect = document.getElementById('tts-chapter-select');
+const ttsStartBtn      = document.getElementById('tts-start-btn');
+const ttsPauseBtn      = document.getElementById('tts-pause-btn');
+const ttsStopBtn       = document.getElementById('tts-stop-btn');
+const ttsStatus        = document.getElementById('tts-status');
 
 let currentIndex = -1;   // -1 = welcome screen
+const ttsSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 
 // ── Build sidebar navigation ─────────────────
 function buildNav() {
@@ -66,6 +72,57 @@ function buildNav() {
     li.appendChild(a);
     chapterList.appendChild(li);
   });
+
+  ttsChapterSelect.innerHTML = '';
+  CHAPTERS.forEach((ch, idx) => {
+    const option = document.createElement('option');
+    option.value = idx;
+    option.textContent = `${ch.label}: ${ch.title}`;
+    ttsChapterSelect.appendChild(option);
+  });
+}
+
+function setTtsStatus(text) {
+  ttsStatus.textContent = text;
+}
+
+function setTtsControlsEnabled(enabled) {
+  ttsChapterSelect.disabled = !enabled || !ttsSupported;
+  ttsStartBtn.disabled = !enabled || !ttsSupported;
+  ttsPauseBtn.disabled = !enabled || !ttsSupported;
+  ttsStopBtn.disabled = !enabled || !ttsSupported;
+}
+
+function stopTts(statusText = 'Gestoppt') {
+  if (!ttsSupported) return;
+  window.speechSynthesis.cancel();
+  setTtsStatus(statusText);
+}
+
+async function startTts() {
+  if (!ttsSupported) return;
+
+  const selectedIndex = Number(ttsChapterSelect.value);
+  if (!Number.isInteger(selectedIndex) || !CHAPTERS[selectedIndex]) return;
+
+  if (selectedIndex !== currentIndex) {
+    await loadChapter(selectedIndex);
+  }
+
+  const text = contentArea.innerText.trim();
+  if (!text) return;
+
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'de-DE';
+  utterance.onstart = () => setTtsStatus('Läuft');
+  utterance.onend = () => setTtsStatus('Fertig');
+  utterance.onerror = () => setTtsStatus('Fehler');
+  window.speechSynthesis.speak(utterance);
+}
+
+function getUnavailableStatus() {
+  return ttsSupported ? '' : 'Nicht verfügbar';
 }
 
 // ── Load & render a chapter ──────────────────
@@ -74,6 +131,7 @@ async function loadChapter(idx) {
   if (!chapter) return;
 
   currentIndex = idx;
+  stopTts(getUnavailableStatus());
   closeSidebar();
   showContent();
 
@@ -106,6 +164,9 @@ async function loadChapter(idx) {
 
   // Prev / Next buttons
   renderNav(idx);
+  ttsChapterSelect.value = String(idx);
+  setTtsControlsEnabled(true);
+  setTtsStatus(ttsSupported ? 'Bereit' : 'Nicht verfügbar');
 }
 
 // ── Prev / Next navigation ────────────────────
@@ -129,6 +190,7 @@ function renderNav(idx) {
 // ── Welcome screen ───────────────────────────
 function showWelcome() {
   currentIndex = -1;
+  stopTts(getUnavailableStatus());
 
   chapterList.querySelectorAll('a').forEach(a => a.classList.remove('active'));
   breadcrumb.innerHTML = '<span>Willkommen</span>';
@@ -136,6 +198,8 @@ function showWelcome() {
   welcomeScreen.style.display  = 'block';
   contentArea.style.display    = 'none';
   chapterNav.style.display     = 'none';
+  setTtsControlsEnabled(false);
+  setTtsStatus(ttsSupported ? 'Kapitel wählen' : 'Nicht verfügbar');
 
   closeSidebar();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -167,6 +231,24 @@ function closeSidebar() {
 
 // ── Start button ──────────────────────────────
 startBtn.addEventListener('click', () => loadChapter(0));
+ttsStartBtn.addEventListener('click', startTts);
+ttsPauseBtn.addEventListener('click', () => {
+  if (!ttsSupported) return;
+  if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+    window.speechSynthesis.pause();
+    setTtsStatus('Pausiert');
+  } else if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    setTtsStatus('Läuft');
+  }
+});
+ttsStopBtn.addEventListener('click', () => stopTts('Gestoppt'));
+ttsChapterSelect.addEventListener('change', () => {
+  if (!ttsSupported) return;
+  if (window.speechSynthesis.speaking || window.speechSynthesis.paused) {
+    stopTts('Bereit');
+  }
+});
 
 // ── Logo / title click → welcome ─────────────
 document.querySelector('#sidebar-header').addEventListener('click', showWelcome);

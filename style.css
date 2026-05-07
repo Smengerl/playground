@@ -171,6 +171,41 @@ body {
   font-weight: 600;
 }
 
+#tts-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Arial', sans-serif;
+  font-size: 0.8rem;
+}
+
+#tts-controls select,
+#tts-controls button {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  padding: 6px 8px;
+}
+
+#tts-controls button {
+  cursor: pointer;
+  background: #fff;
+}
+
+#tts-controls button:disabled,
+#tts-controls select:disabled {
+  cursor: default;
+  color: var(--muted);
+  background: #f3eee7;
+}
+
+#tts-status {
+  color: var(--muted);
+  min-width: 70px;
+}
+
 /* ── Article ────────────────────────────────── */
 #content-area {
   flex: 1;
@@ -347,6 +382,11 @@ body {
   #main { margin-left: 0; }
 
   #topbar { padding: 14px 16px 14px 70px; }
+  #tts-controls {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
 
   #content-area { padding: 32px 20px 60px; }
 

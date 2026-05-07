@@ -32,6 +32,14 @@
 
     <header id="topbar">
       <div class="breadcrumb" aria-live="polite"></div>
+      <div id="tts-controls" aria-label="Vorlesefunktion">
+        <label for="tts-chapter-select">Vorlesen:</label>
+        <select id="tts-chapter-select" aria-label="Kapitel für Vorlesen auswählen"></select>
+        <button id="tts-start-btn" type="button">Start</button>
+        <button id="tts-pause-btn" type="button">Pause</button>
+        <button id="tts-stop-btn" type="button">Stopp</button>
+        <span id="tts-status" aria-live="polite"></span>
+      </div>
     </header>
 
     <!-- Welcome screen (shown on first load) -->
