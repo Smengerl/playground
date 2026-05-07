@@ -1,4 +1,4 @@
-# Kapitel 2: Das Geheimnis der Montagestrecke
+# Kapitel 2: Das Geheimnis der Montagestraße
 
 Am nächsten Morgen nahm Leni Flitz mit zur Montagestrecke. Dort arbeiteten viele geschickte Hände und flinke Roboterarme zusammen. Manche setzten Türen ein, andere befestigten Sitze, und wieder andere prüften, ob jedes Licht freundlich strahlen konnte.
 
